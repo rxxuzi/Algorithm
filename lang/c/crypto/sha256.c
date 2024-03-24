@@ -119,25 +119,19 @@ void SHA256Final(SHA256_CTX *ctx, uchar hash[]) {
 	}
 
 	DBL_INT_ADD(ctx->bitlen[0], ctx->bitlen[1], ctx->datalen * 8);
-	ctx->data[63] = ctx->bitlen[0];
-	ctx->data[62] = ctx->bitlen[0] >> 8;
-	ctx->data[61] = ctx->bitlen[0] >> 16;
-	ctx->data[60] = ctx->bitlen[0] >> 24;
-	ctx->data[59] = ctx->bitlen[1];
-	ctx->data[58] = ctx->bitlen[1] >> 8;
-	ctx->data[57] = ctx->bitlen[1] >> 16;
-	ctx->data[56] = ctx->bitlen[1] >> 24;
+	for (uint x = 0; x < 4; ++x) {
+		ctx->data[63 - x] = ctx->bitlen[0] >> (x * 8);
+	}
+	for (uint x = 0; x < 4; ++x) {
+		ctx->data[59 - x] = ctx->bitlen[1] >> (x * 8);
+	}
 	SHA256Transform(ctx, ctx->data);
 
 	for (i = 0; i < 4; ++i) {
-		hash[i] = (ctx->state[0] >> (24 - i * 8)) & 0x000000ff;
-		hash[i + 4] = (ctx->state[1] >> (24 - i * 8)) & 0x000000ff;
-		hash[i + 8] = (ctx->state[2] >> (24 - i * 8)) & 0x000000ff;
-		hash[i + 12] = (ctx->state[3] >> (24 - i * 8)) & 0x000000ff;
-		hash[i + 16] = (ctx->state[4] >> (24 - i * 8)) & 0x000000ff;
-		hash[i + 20] = (ctx->state[5] >> (24 - i * 8)) & 0x000000ff;
-		hash[i + 24] = (ctx->state[6] >> (24 - i * 8)) & 0x000000ff;
-		hash[i + 28] = (ctx->state[7] >> (24 - i * 8)) & 0x000000ff;
+		for (uint j = 0; j < 8; ++j) {
+			uint x = i + j * 4;
+			hash[x] = (ctx->state[j] >> (24 - i * 8)) & 0x000000ff;
+		}
 	}
 }
 
@@ -164,8 +158,13 @@ char* SHA256(char* data) {
 int main(int argc, char const *argv[]){
     char *str;
     printf("Input -> ");
-    scanf("%s" , str);
+    scanf("%256s" , str);
     printf("Output -> %s", SHA256(str));
-    free(str);
+	/*
+	Input -> Hello
+Output -> 185f8db32271fe25f561a6fc938b2e264306ec304eda518007d1764826381969
+	 * 
+	 */
+    // free(str);
     return 0;
 }
